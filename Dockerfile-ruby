@@ -1,0 +1,22 @@
+FROM ruby:2.6.4
+
+RUN apt-get update \
+  && apt-get install -y sudo \
+  && useradd -G sudo --user-group --create-home --shell /bin/false app \
+  && echo 'app:apppass' | chpasswd \
+  && bundle config --global frozen 1 \
+  && curl https://cli-assets.heroku.com/install.sh | sh
+
+ENV HOME=/home/app
+
+COPY ./Gemfile ./Gemfile.lock $HOME/
+RUN chown -R app:app $HOME/*
+
+USER app
+WORKDIR $HOME
+RUN bundle install
+
+USER root
+COPY . $HOME
+RUN chown -R app:app $HOME/*
+USER app
